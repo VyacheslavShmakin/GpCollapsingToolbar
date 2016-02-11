@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="GpCollapsingToolbarLayout">
+        <attr name="gp_expandedTitleMargin" format="dimension"/>
+        <attr name="gp_expandedTitleMarginStart" format="dimension"/>
+        <attr name="gp_expandedTitleMarginTop" format="dimension"/>
+        <attr name="gp_expandedTitleMarginEnd" format="dimension"/>
+        <attr name="gp_expandedTitleMarginBottom" format="dimension"/>
+        <attr name="gp_expandedTitleTextAppearance" format="reference"/>
+        <attr name="gp_collapsedTitleTextAppearance" format="reference"/>
+        <attr name="gp_contentScrim" format="color"/>
+        <attr name="gp_statusBarScrim" format="color"/>
+        <attr name="gp_toolbarId" format="reference"/>
+        <attr name="gp_collapsedTitleGravity">
+            <flag name="top" value="0x30"/>
+            <flag name="bottom" value="0x50"/>
+            <flag name="left" value="0x03"/>
+            <flag name="right" value="0x05"/>
+            <flag name="center_vertical" value="0x10"/>
+            <flag name="fill_vertical" value="0x70"/>
+            <flag name="center_horizontal" value="0x01"/>
+            <flag name="center" value="0x11"/>
+            <flag name="start" value="0x00800003"/>
+            <flag name="end" value="0x00800005"/>
+        </attr>
+        <attr name="gp_expandedTitleGravity">
+            <flag name="top" value="0x30"/>
+            <flag name="bottom" value="0x50"/>
+            <flag name="left" value="0x03"/>
+            <flag name="right" value="0x05"/>
+            <flag name="center_vertical" value="0x10"/>
+            <flag name="fill_vertical" value="0x70"/>
+            <flag name="center_horizontal" value="0x01"/>
+            <flag name="center" value="0x11"/>
+            <flag name="start" value="0x00800003"/>
+            <flag name="end" value="0x00800005"/>
+        </attr>
+        <attr name="gp_titleEnabled" format="boolean"/>
+        <attr name="gp_title" format="string"/>
+        <attr name="gp_marketStyledBehaviour" format="boolean"/>
+    </declare-styleable>
+</resources>
