@@ -371,7 +371,8 @@ public class GpCollapsingToolbar extends FrameLayout {
     /**
      * Sets the title to be displayed by this view, if enabled.
      *
-     * @attr ref R.styleable#GpCollapsingToolbarLayout_gpTitle
+     * ref R.styleable#GpCollapsingToolbarLayout_gpTitle
+     * @param title Title fot toolbar
      * @see #setTitleEnabled(boolean)
      * @see #getTitle()
      */
@@ -383,7 +384,8 @@ public class GpCollapsingToolbar extends FrameLayout {
      * Returns the title currently being displayed by this view. If the title is not enabled, then
      * this will return {@code null}.
      *
-     * @attr ref R.styleable#GpCollapsingToolbarLayout_gpTitle
+     * ref R.styleable#GpCollapsingToolbarLayout_gpTitle
+     * @return returns current title value;
      */
     @Nullable
     public CharSequence getTitle() {
@@ -392,10 +394,10 @@ public class GpCollapsingToolbar extends FrameLayout {
 
     /**
      * Sets whether this view should display its own title.
-     * <p/>
+     *
      * <p>The title displayed by this view will shrink and grow based on the scroll offset.</p>
      *
-     * @attr ref R.styleable#GpCollapsingToolbarLayout_gpTitleEnabled
+     * ref R.styleable#GpCollapsingToolbarLayout_gpTitleEnabled
      * @see #setTitle(CharSequence)
      * @see #isTitleEnabled()
      */
@@ -410,8 +412,9 @@ public class GpCollapsingToolbar extends FrameLayout {
     /**
      * Returns whether this view is currently displaying its own title.
      *
-     * @attr ref R.styleable#GpCollapsingToolbarLayout_gpTitleEnabled
+     * ref R.styleable#GpCollapsingToolbarLayout_gpTitleEnabled
      * @see #setTitleEnabled(boolean)
+     * @return title enable status;
      */
     public boolean isTitleEnabled() {
         return mCollapsingTitleEnabled;
@@ -419,10 +422,10 @@ public class GpCollapsingToolbar extends FrameLayout {
 
     /**
      * Sets whether this view should have like Google Play App scroll behaviour
-     * <p/>
+     *
      * <p>The title displayed by this view will hide and show based on the Google Play's scroll behaviour.</p>
      *
-     * @attr ref R.styleable#GpCollapsingToolbarLayout_gpStyledBehaviour
+     * ref R.styleable#GpCollapsingToolbarLayout_gpStyledBehaviour
      * @see #isGooglePlayBehaviour()
      */
     public void setGooglePlayBehaviour(boolean enabled) {
@@ -436,7 +439,7 @@ public class GpCollapsingToolbar extends FrameLayout {
     /**
      * Returns whether this view is currently displaying by using Google Play's app behaviour.
      *
-     * @attr ref R.styleable#GpCollapsingToolbarLayout_gpStyledBehaviour
+     * ref R.styleable#GpCollapsingToolbarLayout_gpStyledBehaviour
      * @see #setGooglePlayBehaviour(boolean)
      */
     public boolean isGooglePlayBehaviour() {
@@ -512,7 +515,7 @@ public class GpCollapsingToolbar extends FrameLayout {
      * the scrim functionality.
      *
      * @param drawable the drawable to display
-     * @attr ref R.styleable#GpCollapsingToolbarLayout_gpContentScrim
+     * ref R.styleable#GpCollapsingToolbarLayout_gpContentScrim
      * @see #getContentScrim()
      */
     public void setContentScrim(@Nullable Drawable drawable) {
@@ -536,7 +539,7 @@ public class GpCollapsingToolbar extends FrameLayout {
      * Set the color to use for the content scrim.
      *
      * @param color the color to display
-     * @attr ref R.styleable#GpCollapsingToolbarLayout_gpContentScrim
+     * ref R.styleable#GpCollapsingToolbarLayout_gpContentScrim
      * @see #getContentScrim()
      */
     public void setContentScrimColor(@ColorInt int color) {
@@ -547,7 +550,7 @@ public class GpCollapsingToolbar extends FrameLayout {
      * Set the drawable to use for the content scrim from resources.
      *
      * @param resId drawable resource id
-     * @attr ref R.styleable#GpCollapsingToolbarLayout_gpContentScrim
+     * ref R.styleable#GpCollapsingToolbarLayout_gpContentScrim
      * @see #getContentScrim()
      */
     public void setContentScrimResource(@DrawableRes int resId) {
@@ -557,7 +560,7 @@ public class GpCollapsingToolbar extends FrameLayout {
     /**
      * Returns the drawable which is used for the foreground scrim.
      *
-     * @attr ref R.styleable#GpCollapsingToolbarLayout_gpContentScrim
+     * ref R.styleable#GpCollapsingToolbarLayout_gpContentScrim
      * @see #setContentScrim(Drawable)
      */
     public Drawable getContentScrim() {
@@ -567,11 +570,11 @@ public class GpCollapsingToolbar extends FrameLayout {
     /**
      * Set the drawable to use for the status bar scrim from resources.
      * Providing null will disable the scrim functionality.
-     * <p/>
+     *
      * <p>This scrim is only shown when we have been given a top system inset.</p>
      *
      * @param drawable the drawable to display
-     * @attr ref R.styleable#GpCollapsingToolbarLayout_gpStatusBarScrim
+     * ref R.styleable#GpCollapsingToolbarLayout_gpStatusBarScrim
      * @see #getStatusBarScrim()
      */
     public void setStatusBarScrim(@Nullable Drawable drawable) {
@@ -591,11 +594,11 @@ public class GpCollapsingToolbar extends FrameLayout {
 
     /**
      * Set the color to use for the status bar scrim.
-     * <p/>
+     *
      * <p>This scrim is only shown when we have been given a top system inset.</p>
      *
      * @param color the color to display
-     * @attr ref R.styleable#GpCollapsingToolbarLayout_gpStatusBarScrim
+     * ref R.styleable#GpCollapsingToolbarLayout_gpStatusBarScrim
      * @see #getStatusBarScrim()
      */
     public void setStatusBarScrimColor(@ColorInt int color) {
@@ -606,7 +609,7 @@ public class GpCollapsingToolbar extends FrameLayout {
      * Set the drawable to use for the content scrim from resources.
      *
      * @param resId drawable resource id
-     * @attr ref R.styleable#GpCollapsingToolbarLayout_gpStatusBarScrim
+     * ref R.styleable#GpCollapsingToolbarLayout_gpStatusBarScrim
      * @see #getStatusBarScrim()
      */
     public void setStatusBarScrimResource(@DrawableRes int resId) {
@@ -616,8 +619,9 @@ public class GpCollapsingToolbar extends FrameLayout {
     /**
      * Returns the drawable which is used for the status bar scrim.
      *
-     * @attr ref R.styleable#GpCollapsingToolbarLayout_gpStatusBarScrim
+     * ref R.styleable#GpCollapsingToolbarLayout_gpStatusBarScrim
      * @see #setStatusBarScrim(Drawable)
+     * @return the drawable which is used for the status bar scrim
      */
     public Drawable getStatusBarScrim() {
         return mStatusBarScrim;
@@ -627,7 +631,7 @@ public class GpCollapsingToolbar extends FrameLayout {
      * Sets the text color and size for the collapsed title from the specified
      * TextAppearance resource.
      *
-     * @attr ref R.styleable#GpCollapsingToolbarLayout_gpCollapsedTitleTextAppearance
+     * ref R.styleable#GpCollapsingToolbarLayout_gpCollapsedTitleTextAppearance
      */
     public void setCollapsedTitleTextAppearance(@StyleRes int resId) {
         mCollapsingTextHelper.setCollapsedTextAppearance(resId);
@@ -647,7 +651,7 @@ public class GpCollapsingToolbar extends FrameLayout {
      * be used when there is extra space in the collapsed bounds beyond what is required for
      * the title itself.
      *
-     * @attr ref R.styleable#GpCollapsingToolbarLayout_gpCollapsedTitleGravity
+     * ref R.styleable#GpCollapsingToolbarLayout_gpCollapsedTitleGravity
      */
     public void setCollapsedTitleGravity(int gravity) {
         mCollapsingTextHelper.setCollapsedTextGravity(gravity);
@@ -656,7 +660,7 @@ public class GpCollapsingToolbar extends FrameLayout {
     /**
      * Returns the horizontal and vertical alignment for title when collapsed.
      *
-     * @attr ref R.styleable#GpCollapsingToolbarLayout_gpCollapsedTitleGravity
+     * ref R.styleable#GpCollapsingToolbarLayout_gpCollapsedTitleGravity
      */
     public int getCollapsedTitleGravity() {
         return mCollapsingTextHelper.getCollapsedTextGravity();
@@ -666,7 +670,7 @@ public class GpCollapsingToolbar extends FrameLayout {
      * Sets the text color and size for the expanded title from the specified
      * TextAppearance resource.
      *
-     * @attr ref R.styleable#GpCollapsingToolbarLayout_gpExpandedTitleTextAppearance
+     * ref R.styleable#GpCollapsingToolbarLayout_gpExpandedTitleTextAppearance
      */
     public void setExpandedTitleTextAppearance(@StyleRes int resId) {
         mCollapsingTextHelper.setExpandedTextAppearance(resId);
@@ -686,7 +690,7 @@ public class GpCollapsingToolbar extends FrameLayout {
      * be used when there is extra space in the expanded bounds beyond what is required for
      * the title itself.
      *
-     * @attr ref R.styleable#GpCollapsingToolbarLayout_gpExpandedTitleGravity
+     * ref R.styleable#GpCollapsingToolbarLayout_gpExpandedTitleGravity
      */
     public void setExpandedTitleGravity(int gravity) {
         mCollapsingTextHelper.setExpandedTextGravity(gravity);
@@ -695,7 +699,7 @@ public class GpCollapsingToolbar extends FrameLayout {
     /**
      * Returns the horizontal and vertical alignment for title when expanded.
      *
-     * @attr ref R.styleable#GpCollapsingToolbarLayout_gpExpandedTitleGravity
+     * ref R.styleable#GpCollapsingToolbarLayout_gpExpandedTitleGravity
      */
     public int getExpandedTitleGravity() {
         return mCollapsingTextHelper.getExpandedTextGravity();
