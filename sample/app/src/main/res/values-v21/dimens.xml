@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="app_bar_height">180dp</dimen>
+    <dimen name="parallax_bg_height">320dp</dimen>
+    <dimen name="content_margin_horizontal">16dp</dimen>
+</resources>

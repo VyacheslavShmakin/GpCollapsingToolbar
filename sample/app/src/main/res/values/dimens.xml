@@ -1,0 +1,8 @@
+<resources>
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="text_margin">16dp</dimen>
+
+    <dimen name="app_bar_height">180dp</dimen>
+    <dimen name="parallax_bg_height">180dp</dimen>
+    <dimen name="content_margin_horizontal">0dp</dimen>
+</resources>
