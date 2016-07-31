@@ -53,6 +53,7 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/app_bar_height"
             android:background="@android:color/transparent"
+            android:fitsSystemWindows="true"
             android:theme="@style/AppTheme.AppBarOverlay">
 
             <ru.shmakinv.android.material.widget.GpCollapsingToolbar
@@ -62,6 +63,8 @@
                 android:fitsSystemWindows="true"
                 app:gp_contentScrim="@android:color/holo_red_dark"
                 app:gp_marketStyledBehaviour="true"
+                app:gp_scrimAnimationDuration="300"
+                app:layout_scrollInterpolator="@android:anim/accelerate_decelerate_interpolator"
                 app:gp_statusBarScrim="@android:color/holo_red_light"
                 app:layout_scrollFlags="scroll|enterAlways|enterAlwaysCollapsed">
 
