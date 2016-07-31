@@ -1,12 +1,15 @@
 package ru.shmakinv.android.material.widget;
 
-import android.os.Build;
 import android.support.v4.view.ViewCompat;
 import android.view.View;
-import android.view.ViewParent;
 
 /**
- * ViewOffsetHelper
+ * Utility helper for moving a {@link android.view.View} around using
+ * {@link android.view.View#offsetLeftAndRight(int)} and
+ * {@link android.view.View#offsetTopAndBottom(int)}.
+ * <p>
+ * Also the setting of absolute offsets (similar to translationX/Y), rather than additive
+ * offsets.
  */
 class ViewOffsetHelper {
 
@@ -33,21 +36,6 @@ class ViewOffsetHelper {
     private void updateOffsets() {
         ViewCompat.offsetTopAndBottom(mView, mOffsetTop - (mView.getTop() - mLayoutTop));
         ViewCompat.offsetLeftAndRight(mView, mOffsetLeft - (mView.getLeft() - mLayoutLeft));
-
-        // Manually invalidate the view and parent to make sure we get drawn pre-M
-        if (Build.VERSION.SDK_INT < 23) {
-            tickleInvalidationFlag(mView);
-            final ViewParent vp = mView.getParent();
-            if (vp instanceof View) {
-                tickleInvalidationFlag((View) vp);
-            }
-        }
-    }
-
-    private static void tickleInvalidationFlag(View view) {
-        final float x = ViewCompat.getTranslationX(view);
-        ViewCompat.setTranslationY(view, x + 1);
-        ViewCompat.setTranslationY(view, x);
     }
 
     /**

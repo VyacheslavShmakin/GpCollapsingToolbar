@@ -1,11 +1,5 @@
 package ru.shmakinv.android.material.widget;
 
-/**
- * MathUtils
- *
- * @author: Vyacheslav Shmakin
- * @version: 02.02.2016
- */
 class MathUtils {
 
     static int constrain(int amount, int low, int high) {

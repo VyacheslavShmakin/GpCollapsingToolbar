@@ -13,11 +13,13 @@ import android.os.Build;
 import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.IntDef;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StyleRes;
 import android.support.design.widget.AppBarLayout;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.view.WindowInsetsCompat;
@@ -41,16 +43,17 @@ import java.lang.annotation.RetentionPolicy;
  */
 public class GpCollapsingToolbar extends FrameLayout {
 
-    private static final int SCRIM_ANIMATION_DURATION = 600;
+    private static final int DEFAULT_SCRIM_ANIMATION_DURATION = 600;
 
     private boolean mRefreshToolbar = true;
     private int mToolbarId;
     private Toolbar mToolbar;
+    private View mToolbarDirectChild;
     private View mDummyView;
 
-    private int mExpandedMarginLeft;
+    private int mExpandedMarginStart;
     private int mExpandedMarginTop;
-    private int mExpandedMarginRight;
+    private int mExpandedMarginEnd;
     private int mExpandedMarginBottom;
 
     private final Rect mTmpRect = new Rect();
@@ -64,6 +67,8 @@ public class GpCollapsingToolbar extends FrameLayout {
     private int mScrimAlpha;
     private boolean mScrimsAreShown;
     private ValueAnimatorCompat mScrimAnimator;
+    private int mScrimAnimationDuration;
+    private int mScrimVisibleHeightTrigger = -1;
 
     private AppBarLayout.OnOffsetChangedListener mOnOffsetChangedListener;
 
@@ -83,41 +88,33 @@ public class GpCollapsingToolbar extends FrameLayout {
     public GpCollapsingToolbar(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
+        ThemeUtils.checkAppCompatTheme(context);
+
         mCollapsingTextHelper = new CollapsingTextHelper(this);
         mCollapsingTextHelper.setTextSizeInterpolator(AnimationUtils.DECELERATE_INTERPOLATOR);
 
-        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.GpCollapsingToolbarLayout, defStyleAttr,
+        TypedArray a = context.obtainStyledAttributes(attrs,
+                R.styleable.GpCollapsingToolbarLayout, defStyleAttr,
                 R.style.Widget_Design_CollapsingToolbar);
 
-        mCollapsingTextHelper.setExpandedTextGravity(a.getInt(
-                R.styleable.GpCollapsingToolbarLayout_gp_expandedTitleGravity,
+        mCollapsingTextHelper.setExpandedTextGravity(
+                a.getInt(R.styleable.GpCollapsingToolbarLayout_gp_expandedTitleGravity,
                 GravityCompat.START | Gravity.BOTTOM));
 
         mCollapsingTextHelper.setCollapsedTextGravity(
                 a.getInt(R.styleable.GpCollapsingToolbarLayout_gp_collapsedTitleGravity,
                         GravityCompat.START | Gravity.CENTER_VERTICAL));
 
-        mExpandedMarginLeft = mExpandedMarginTop = mExpandedMarginRight = mExpandedMarginBottom =
+        mExpandedMarginStart = mExpandedMarginTop = mExpandedMarginEnd = mExpandedMarginBottom =
                 a.getDimensionPixelSize(R.styleable.GpCollapsingToolbarLayout_gp_expandedTitleMargin, 0);
 
-        final boolean isRtl = ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_RTL;
         if (a.hasValue(R.styleable.GpCollapsingToolbarLayout_gp_expandedTitleMarginStart)) {
-            final int marginStart = a.getDimensionPixelSize(
+            mExpandedMarginStart = a.getDimensionPixelSize(
                     R.styleable.GpCollapsingToolbarLayout_gp_expandedTitleMarginStart, 0);
-            if (isRtl) {
-                mExpandedMarginRight = marginStart;
-            } else {
-                mExpandedMarginLeft = marginStart;
-            }
         }
         if (a.hasValue(R.styleable.GpCollapsingToolbarLayout_gp_expandedTitleMarginEnd)) {
-            final int marginEnd = a.getDimensionPixelSize(
+            mExpandedMarginEnd = a.getDimensionPixelSize(
                     R.styleable.GpCollapsingToolbarLayout_gp_expandedTitleMarginEnd, 0);
-            if (isRtl) {
-                mExpandedMarginLeft = marginEnd;
-            } else {
-                mExpandedMarginRight = marginEnd;
-            }
         }
         if (a.hasValue(R.styleable.GpCollapsingToolbarLayout_gp_expandedTitleMarginTop)) {
             mExpandedMarginTop = a.getDimensionPixelSize(
@@ -146,6 +143,12 @@ public class GpCollapsingToolbar extends FrameLayout {
                     a.getResourceId(R.styleable.GpCollapsingToolbarLayout_gp_collapsedTitleTextAppearance, 0));
         }
 
+        mScrimVisibleHeightTrigger = a.getInt(R.styleable.GpCollapsingToolbarLayout_gp_scrimVisibleHeightTrigger, -1);
+
+        mScrimAnimationDuration = a.getInt(
+                R.styleable.GpCollapsingToolbarLayout_gp_scrimAnimationDuration,
+                DEFAULT_SCRIM_ANIMATION_DURATION);
+
         setContentScrim(a.getDrawable(R.styleable.GpCollapsingToolbarLayout_gp_contentScrim));
         setStatusBarScrim(a.getDrawable(R.styleable.GpCollapsingToolbarLayout_gp_statusBarScrim));
 
@@ -158,11 +161,8 @@ public class GpCollapsingToolbar extends FrameLayout {
         ViewCompat.setOnApplyWindowInsetsListener(this,
                 new android.support.v4.view.OnApplyWindowInsetsListener() {
                     @Override
-                    public WindowInsetsCompat onApplyWindowInsets(View v,
-                                                                  WindowInsetsCompat insets) {
-                        mLastInsets = insets;
-                        requestLayout();
-                        return insets.consumeSystemWindowInsets();
+                    public WindowInsetsCompat onApplyWindowInsets(View v, WindowInsetsCompat insets) {
+                        return setWindowInsets(insets);
                     }
                 });
     }
@@ -179,6 +179,9 @@ public class GpCollapsingToolbar extends FrameLayout {
             }
             ((AppBarLayout) parent).addOnOffsetChangedListener(mOnOffsetChangedListener);
         }
+
+        // We're attached, so lets request an inset dispatch
+        ViewCompat.requestApplyInsets(this);
     }
 
     @Override
@@ -190,6 +193,14 @@ public class GpCollapsingToolbar extends FrameLayout {
         }
 
         super.onDetachedFromWindow();
+    }
+
+    private WindowInsetsCompat setWindowInsets(WindowInsetsCompat insets) {
+        if (mLastInsets != insets) {
+            mLastInsets = insets;
+            requestLayout();
+        }
+        return insets.consumeSystemWindowInsets();
     }
 
     @Override
@@ -204,7 +215,7 @@ public class GpCollapsingToolbar extends FrameLayout {
             mContentScrim.draw(canvas);
         }
 
-        // Let the collapsing text helper draw it's text
+        // Let the collapsing text helper draw its text
         if (mCollapsingTitleEnabled && mDrawCollapsingTitle) {
             mCollapsingTextHelper.draw(canvas);
         }
@@ -249,38 +260,48 @@ public class GpCollapsingToolbar extends FrameLayout {
             return;
         }
 
-        Toolbar fallback = null, selected = null;
+        // First clear out the current Toolbar
+        mToolbar = null;
+        mToolbarDirectChild = null;
 
-        for (int i = 0, count = getChildCount(); i < count; i++) {
-            final View child = getChildAt(i);
-            if (child instanceof Toolbar) {
-                if (mToolbarId != -1) {
-                    // There's a toolbar id set so try and find it...
-                    if (mToolbarId == child.getId()) {
-                        // We found the primary Toolbar, use it
-                        selected = (Toolbar) child;
-                        break;
-                    }
-                    if (fallback == null) {
-                        // We'll record the first Toolbar as our fallback
-                        fallback = (Toolbar) child;
-                    }
-                } else {
-                    // We don't have a id to check for so just use the first we come across
-                    selected = (Toolbar) child;
-                    break;
-                }
+        if (mToolbarId != -1) {
+            // If we have an ID set, try and find it and it's direct parent to us
+            mToolbar = (Toolbar) findViewById(mToolbarId);
+            if (mToolbar != null) {
+                mToolbarDirectChild = findDirectChild(mToolbar);
             }
         }
 
-        if (selected == null) {
-            // If we didn't find a primary Toolbar, use the fallback
-            selected = fallback;
+        if (mToolbar == null) {
+            // If we don't have an ID, or couldn't find a Toolbar with the correct ID, try and find
+            // one from our direct children
+            Toolbar toolbar = null;
+            for (int i = 0, count = getChildCount(); i < count; i++) {
+                final View child = getChildAt(i);
+                if (child instanceof Toolbar) {
+                    toolbar = (Toolbar) child;
+                    break;
+                }
+            }
+            mToolbar = toolbar;
         }
 
-        mToolbar = selected;
         updateDummyView();
         mRefreshToolbar = false;
+    }
+
+    /**
+     * Returns the direct child of this layout, which itself is the ancestor of the
+     * given view.
+     */
+    private View findDirectChild(final View descendant) {
+        View directChild = descendant;
+        for (ViewParent p = descendant.getParent(); p != this && p != null; p = p.getParent()) {
+            if (p instanceof View) {
+                directChild = (View) p;
+            }
+        }
+        return directChild;
     }
 
     private void updateDummyView() {
@@ -316,17 +337,29 @@ public class GpCollapsingToolbar extends FrameLayout {
         if (mCollapsingTitleEnabled && mDummyView != null) {
             // We only draw the title if the dummy view is being displayed (Toolbar removes
             // views if there is no space)
-            mDrawCollapsingTitle = mDummyView.isShown();
+            mDrawCollapsingTitle = ViewCompat.isAttachedToWindow(mDummyView) && mDummyView.getVisibility() == VISIBLE;
 
             if (mDrawCollapsingTitle) {
+                final boolean isRtl = ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_RTL;
+
+                // Update the collapsed bounds
+                int bottomOffset = 0;
+                if (mToolbarDirectChild != null && mToolbarDirectChild != this) {
+                    final LayoutParams lp = (LayoutParams) mToolbarDirectChild.getLayoutParams();
+                    bottomOffset = lp.bottomMargin;
+                }
                 ViewGroupUtils.getDescendantRect(this, mDummyView, mTmpRect);
-                mCollapsingTextHelper.setCollapsedBounds(mTmpRect.left, bottom - mTmpRect.height(),
-                        mTmpRect.right, bottom);
+                mCollapsingTextHelper.setCollapsedBounds(
+                        mTmpRect.left + (isRtl ? mToolbar.getTitleMarginEnd() : mToolbar.getTitleMarginStart()),
+                        bottom + mToolbar.getTitleMarginTop() - mTmpRect.height() - bottomOffset,
+                        mTmpRect.right + (isRtl ? mToolbar.getTitleMarginStart() : mToolbar.getTitleMarginEnd()),
+                        bottom - bottomOffset - mToolbar.getTitleMarginBottom());
+
                 // Update the expanded bounds
                 mCollapsingTextHelper.setExpandedBounds(
-                        mExpandedMarginLeft,
+                        isRtl ? mExpandedMarginEnd : mExpandedMarginStart,
                         mTmpRect.bottom + mExpandedMarginTop,
-                        right - left - mExpandedMarginRight,
+                        right - left - (isRtl ? mExpandedMarginStart : mExpandedMarginEnd),
                         bottom - top - mExpandedMarginBottom);
                 // Now recalculate using the new bounds
                 mCollapsingTextHelper.recalculate();
@@ -342,7 +375,7 @@ public class GpCollapsingToolbar extends FrameLayout {
                 if (child.getTop() < insetTop) {
                     // If the child isn't set to fit system windows but is drawing within the inset
                     // offset it down
-                    child.offsetTopAndBottom(insetTop);
+                    ViewCompat.offsetTopAndBottom(child, insetTop);
                 }
             }
 
@@ -355,8 +388,21 @@ public class GpCollapsingToolbar extends FrameLayout {
                 // If we do not currently have a title, try and grab it from the Toolbar
                 mCollapsingTextHelper.setText(mToolbar.getTitle());
             }
-            setMinimumHeight(mToolbar.getHeight());
+            if (mToolbarDirectChild == null || mToolbarDirectChild == this) {
+                setMinimumHeight(getHeightWithMargins(mToolbar));
+            } else {
+                setMinimumHeight(getHeightWithMargins(mToolbarDirectChild));
+            }
         }
+    }
+
+    private static int getHeightWithMargins(@NonNull final View view) {
+        final ViewGroup.LayoutParams lp = view.getLayoutParams();
+        if (lp instanceof MarginLayoutParams) {
+            final MarginLayoutParams mlp = (MarginLayoutParams) lp;
+            return view.getHeight() + mlp.topMargin + mlp.bottomMargin;
+        }
+        return view.getHeight();
     }
 
     private static ViewOffsetHelper getViewOffsetHelper(View view) {
@@ -371,10 +417,10 @@ public class GpCollapsingToolbar extends FrameLayout {
     /**
      * Sets the title to be displayed by this view, if enabled.
      *
-     * ref R.styleable#GpCollapsingToolbarLayout_gpTitle
-     * @param title Title fot toolbar
      * @see #setTitleEnabled(boolean)
      * @see #getTitle()
+     *
+     * ref R.styleable#GpCollapsingToolbarLayout_gptitle
      */
     public void setTitle(@Nullable CharSequence title) {
         mCollapsingTextHelper.setText(title);
@@ -384,8 +430,7 @@ public class GpCollapsingToolbar extends FrameLayout {
      * Returns the title currently being displayed by this view. If the title is not enabled, then
      * this will return {@code null}.
      *
-     * ref R.styleable#GpCollapsingToolbarLayout_gpTitle
-     * @return returns current title value;
+     * ref R.styleable#GpCollapsingToolbarLayout_gptitle
      */
     @Nullable
     public CharSequence getTitle() {
@@ -397,9 +442,10 @@ public class GpCollapsingToolbar extends FrameLayout {
      *
      * <p>The title displayed by this view will shrink and grow based on the scroll offset.</p>
      *
-     * ref R.styleable#GpCollapsingToolbarLayout_gpTitleEnabled
      * @see #setTitle(CharSequence)
      * @see #isTitleEnabled()
+     *
+     * ref R.styleable#GpCollapsingToolbarLayout_gptitleEnabled
      */
     public void setTitleEnabled(boolean enabled) {
         if (enabled != mCollapsingTitleEnabled) {
@@ -412,9 +458,9 @@ public class GpCollapsingToolbar extends FrameLayout {
     /**
      * Returns whether this view is currently displaying its own title.
      *
-     * ref R.styleable#GpCollapsingToolbarLayout_gpTitleEnabled
      * @see #setTitleEnabled(boolean)
-     * @return title enable status;
+     *
+     * ref R.styleable#GpCollapsingToolbarLayout_gptitleEnabled
      */
     public boolean isTitleEnabled() {
         return mCollapsingTitleEnabled;
@@ -452,6 +498,7 @@ public class GpCollapsingToolbar extends FrameLayout {
      * this view has already been laid out.
      *
      * @param shown whether the scrims should be shown
+     *
      * @see #getStatusBarScrim()
      * @see #getContentScrim()
      */
@@ -463,8 +510,9 @@ public class GpCollapsingToolbar extends FrameLayout {
      * Set whether the content scrim and/or status bar scrim should be shown or not. Any change
      * in the vertical scroll may overwrite this value.
      *
-     * @param shown   whether the scrims should be shown
+     * @param shown whether the scrims should be shown
      * @param animate whether to animate the visibility change
+     *
      * @see #getStatusBarScrim()
      * @see #getContentScrim()
      */
@@ -483,8 +531,11 @@ public class GpCollapsingToolbar extends FrameLayout {
         ensureToolbar();
         if (mScrimAnimator == null) {
             mScrimAnimator = ViewUtils.createAnimator();
-            mScrimAnimator.setDuration(SCRIM_ANIMATION_DURATION);
-            mScrimAnimator.setInterpolator(AnimationUtils.FAST_OUT_SLOW_IN_INTERPOLATOR);
+            mScrimAnimator.setDuration(mScrimAnimationDuration);
+            mScrimAnimator.setInterpolator(
+                    targetAlpha > mScrimAlpha
+                            ? AnimationUtils.FAST_OUT_LINEAR_IN_INTERPOLATOR
+                            : AnimationUtils.LINEAR_OUT_SLOW_IN_INTERPOLATOR);
             mScrimAnimator.setUpdateListener(new ValueAnimatorCompat.AnimatorUpdateListener() {
                 @Override
                 public void onAnimationUpdate(ValueAnimatorCompat animator) {
@@ -515,6 +566,7 @@ public class GpCollapsingToolbar extends FrameLayout {
      * the scrim functionality.
      *
      * @param drawable the drawable to display
+     *
      * ref R.styleable#GpCollapsingToolbarLayout_gpContentScrim
      * @see #getContentScrim()
      */
@@ -523,13 +575,11 @@ public class GpCollapsingToolbar extends FrameLayout {
             if (mContentScrim != null) {
                 mContentScrim.setCallback(null);
             }
-            if (drawable != null) {
-                mContentScrim = drawable.mutate();
-                drawable.setBounds(0, 0, getWidth(), getHeight());
-                drawable.setCallback(this);
-                drawable.setAlpha(mScrimAlpha);
-            } else {
-                mContentScrim = null;
+            mContentScrim = drawable != null ? drawable.mutate() : null;
+            if (mContentScrim != null) {
+                mContentScrim.setBounds(0, 0, getWidth(), getHeight());
+                mContentScrim.setCallback(this);
+                mContentScrim.setAlpha(mScrimAlpha);
             }
             ViewCompat.postInvalidateOnAnimation(this);
         }
@@ -539,6 +589,7 @@ public class GpCollapsingToolbar extends FrameLayout {
      * Set the color to use for the content scrim.
      *
      * @param color the color to display
+     *
      * ref R.styleable#GpCollapsingToolbarLayout_gpContentScrim
      * @see #getContentScrim()
      */
@@ -550,6 +601,7 @@ public class GpCollapsingToolbar extends FrameLayout {
      * Set the drawable to use for the content scrim from resources.
      *
      * @param resId drawable resource id
+     *
      * ref R.styleable#GpCollapsingToolbarLayout_gpContentScrim
      * @see #getContentScrim()
      */
@@ -582,13 +634,56 @@ public class GpCollapsingToolbar extends FrameLayout {
             if (mStatusBarScrim != null) {
                 mStatusBarScrim.setCallback(null);
             }
-
-            mStatusBarScrim = drawable;
-            if (drawable != null) {
-                drawable.setCallback(this);
-                drawable.mutate().setAlpha(mScrimAlpha);
+            mStatusBarScrim = drawable != null ? drawable.mutate() : null;
+            if (mStatusBarScrim != null) {
+                if (mStatusBarScrim.isStateful()) {
+                    mStatusBarScrim.setState(getDrawableState());
+                }
+                DrawableCompat.setLayoutDirection(mStatusBarScrim, ViewCompat.getLayoutDirection(this));
+                mStatusBarScrim.setVisible(getVisibility() == VISIBLE, false);
+                mStatusBarScrim.setCallback(this);
+                mStatusBarScrim.setAlpha(mScrimAlpha);
             }
             ViewCompat.postInvalidateOnAnimation(this);
+        }
+    }
+
+    @Override
+    protected void drawableStateChanged() {
+        super.drawableStateChanged();
+
+        final int[] state = getDrawableState();
+        boolean changed = false;
+
+        Drawable d = mStatusBarScrim;
+        if (d != null && d.isStateful()) {
+            changed |= d.setState(state);
+        }
+        d = mContentScrim;
+        if (d != null && d.isStateful()) {
+            changed |= d.setState(state);
+        }
+
+        if (changed) {
+            invalidate();
+        }
+    }
+
+    @Override
+    protected boolean verifyDrawable(Drawable who) {
+        return super.verifyDrawable(who) || who == mContentScrim || who == mStatusBarScrim;
+    }
+
+    @Override
+    public void setVisibility(int visibility) {
+        super.setVisibility(visibility);
+
+        final boolean visible = visibility == VISIBLE;
+        if (mStatusBarScrim != null && mStatusBarScrim.isVisible() != visible) {
+            mStatusBarScrim.setVisible(visible, false);
+        }
+        if (mContentScrim != null && mContentScrim.isVisible() != visible) {
+            mContentScrim.setVisible(visible, false);
         }
     }
 
@@ -598,6 +693,7 @@ public class GpCollapsingToolbar extends FrameLayout {
      * <p>This scrim is only shown when we have been given a top system inset.</p>
      *
      * @param color the color to display
+     *
      * ref R.styleable#GpCollapsingToolbarLayout_gpStatusBarScrim
      * @see #getStatusBarScrim()
      */
@@ -609,6 +705,7 @@ public class GpCollapsingToolbar extends FrameLayout {
      * Set the drawable to use for the content scrim from resources.
      *
      * @param resId drawable resource id
+     *
      * ref R.styleable#GpCollapsingToolbarLayout_gpStatusBarScrim
      * @see #getStatusBarScrim()
      */
@@ -621,8 +718,8 @@ public class GpCollapsingToolbar extends FrameLayout {
      *
      * ref R.styleable#GpCollapsingToolbarLayout_gpStatusBarScrim
      * @see #setStatusBarScrim(Drawable)
-     * @return the drawable which is used for the status bar scrim
      */
+    @Nullable
     public Drawable getStatusBarScrim() {
         return mStatusBarScrim;
     }
@@ -740,10 +837,173 @@ public class GpCollapsingToolbar extends FrameLayout {
     }
 
     /**
-     * The additional offset used to define when to trigger the scrim visibility change.
+     * Sets the expanded title margins.
+     *
+     * @param start the starting title margin in pixels
+     * @param top the top title margin in pixels
+     * @param end the ending title margin in pixels
+     * @param bottom the bottom title margin in pixels
+     *
+     * @see #getExpandedTitleMarginStart()
+     * @see #getExpandedTitleMarginTop()
+     * @see #getExpandedTitleMarginEnd()
+     * @see #getExpandedTitleMarginBottom()
+     * ref R.styleable#GpCollapsingToolbarLayout_gpExpandedTitleMargin
      */
-    final int getScrimTriggerOffset() {
-        return 2 * ViewCompat.getMinimumHeight(this);
+    public void setExpandedTitleMargin(int start, int top, int end, int bottom) {
+        mExpandedMarginStart = start;
+        mExpandedMarginTop = top;
+        mExpandedMarginEnd = end;
+        mExpandedMarginBottom = bottom;
+        requestLayout();
+    }
+
+    /**
+     * @return the starting expanded title margin in pixels
+     *
+     * @see #setExpandedTitleMarginStart(int)
+     * ref R.styleable#GpCollapsingToolbarLayout_gpExpandedTitleMarginStart
+     */
+    public int getExpandedTitleMarginStart() {
+        return mExpandedMarginStart;
+    }
+
+    /**
+     * Sets the starting expanded title margin in pixels.
+     *
+     * @param margin the starting title margin in pixels
+     * @see #getExpandedTitleMarginStart()
+     * ref R.styleable#GpCollapsingToolbarLayout_gpExpandedTitleMarginStart
+     */
+    public void setExpandedTitleMarginStart(int margin) {
+        mExpandedMarginStart = margin;
+        requestLayout();
+    }
+
+    /**
+     * @return the top expanded title margin in pixels
+     * @see #setExpandedTitleMarginTop(int)
+     * ref R.styleable#GpCollapsingToolbarLayout_gpExpandedTitleMarginTop
+     */
+    public int getExpandedTitleMarginTop() {
+        return mExpandedMarginTop;
+    }
+
+    /**
+     * Sets the top expanded title margin in pixels.
+     *
+     * @param margin the top title margin in pixels
+     * @see #getExpandedTitleMarginTop()
+     * ref R.styleable#GpCollapsingToolbarLayout_gpExpandedTitleMarginTop
+     */
+    public void setExpandedTitleMarginTop(int margin) {
+        mExpandedMarginTop = margin;
+        requestLayout();
+    }
+
+    /**
+     * @return the ending expanded title margin in pixels
+     * @see #setExpandedTitleMarginEnd(int)
+     * ref R.styleable#GpCollapsingToolbarLayout_gpExpandedTitleMarginEnd
+     */
+    public int getExpandedTitleMarginEnd() {
+        return mExpandedMarginEnd;
+    }
+
+    /**
+     * Sets the ending expanded title margin in pixels.
+     *
+     * @param margin the ending title margin in pixels
+     * @see #getExpandedTitleMarginEnd()
+     * ref R.styleable#GpCollapsingToolbarLayout_gpExpandedTitleMarginEnd
+     */
+    public void setExpandedTitleMarginEnd(int margin) {
+        mExpandedMarginEnd = margin;
+        requestLayout();
+    }
+
+    /**
+     * @return the bottom expanded title margin in pixels
+     * @see #setExpandedTitleMarginBottom(int)
+     * ref R.styleable#GpCollapsingToolbarLayout_gpExpandedTitleMarginBottom
+     */
+    public int getExpandedTitleMarginBottom() {
+        return mExpandedMarginBottom;
+    }
+
+    /**
+     * Sets the bottom expanded title margin in pixels.
+     *
+     * @param margin the bottom title margin in pixels
+     * @see #getExpandedTitleMarginBottom()
+     * ref android.support.design.R.styleable#CollapsingToolbarLayout_expandedTitleMarginBottom
+     */
+    public void setExpandedTitleMarginBottom(int margin) {
+        mExpandedMarginBottom = margin;
+        requestLayout();
+    }
+
+    /**
+     * Set the amount of visible height in pixels used to define when to trigger a scrim
+     * visibility change.
+     *
+     * <p>If the visible height of this view is less than the given value, the scrims will be
+     * made visible, otherwise they are hidden.</p>
+     *
+     * @param height value in pixels used to define when to trigger a scrim visibility change
+     *
+     * ref R.styleable#GpCollapsingToolbarLayout_gpScrimVisibleHeightTrigger
+     */
+    public void setScrimVisibleHeightTrigger(@IntRange(from = 0) final int height) {
+        //noinspection Range
+        if (mScrimVisibleHeightTrigger != height) {
+            mScrimVisibleHeightTrigger = height;
+            // Update the scrim visibilty
+            updateScrimVisibility();
+        }
+    }
+
+    /**
+     * Returns the amount of visible height in pixels used to define when to trigger a scrim
+     * visibility change.
+     *
+     */
+    public int getScrimVisibleHeightTrigger() {
+        if (mScrimVisibleHeightTrigger >= 0) {
+            // If we have one explictly set, return it
+            return mScrimVisibleHeightTrigger;
+        }
+
+        // Otherwise we'll use the default computed value
+        final int insetTop = mLastInsets != null ? mLastInsets.getSystemWindowInsetTop() : 0;
+
+        final int minHeight = ViewCompat.getMinimumHeight(this);
+        if (minHeight > 0) {
+            // If we have a minHeight set, lets use 2 * minHeight (capped at our height)
+            return Math.min((minHeight * 2) + insetTop, getHeight());
+        }
+
+        // If we reach here then we don't have a min height set. Instead we'll take a
+        // guess at 1/3 of our height being visible
+        return getHeight() / 3;
+    }
+
+    /**
+     * Set the duration used for scrim visibility animations.
+     *
+     * @param duration the duration to use in milliseconds
+     *
+     * ref R.styleable#GpCollapsingToolbarLayout_gpScrimAnimationDuration
+     */
+    public void setScrimAnimationDuration(@IntRange(from = 0) final int duration) {
+        mScrimAnimationDuration = duration;
+    }
+
+    /**
+     * Returns the duration in milliseconds used for scrim visibility animations.
+     */
+    public long getScrimAnimationDuration() {
+        return mScrimAnimationDuration;
     }
 
     @Override
@@ -753,7 +1013,7 @@ public class GpCollapsingToolbar extends FrameLayout {
 
     @Override
     protected LayoutParams generateDefaultLayoutParams() {
-        return new LayoutParams(super.generateDefaultLayoutParams());
+        return new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
     }
 
     @Override
@@ -770,17 +1030,14 @@ public class GpCollapsingToolbar extends FrameLayout {
 
         private static final float DEFAULT_PARALLAX_MULTIPLIER = 0.5f;
 
-        /**
-         * @hide
-         */
+        /** @hide */
         @IntDef({
                 COLLAPSE_MODE_OFF,
                 COLLAPSE_MODE_PIN,
                 COLLAPSE_MODE_PARALLAX
         })
         @Retention(RetentionPolicy.SOURCE)
-        @interface CollapseMode {
-        }
+        @interface CollapseMode {}
 
         /**
          * The view will act as normal with no collapsing behavior.
@@ -802,17 +1059,15 @@ public class GpCollapsingToolbar extends FrameLayout {
         int mCollapseMode = COLLAPSE_MODE_OFF;
         float mParallaxMult = DEFAULT_PARALLAX_MULTIPLIER;
 
-        @SuppressLint("PrivateResource")
         public LayoutParams(Context c, AttributeSet attrs) {
             super(c, attrs);
 
-            TypedArray a = c.obtainStyledAttributes(attrs,
-                    R.styleable.CollapsingAppBarLayout_LayoutParams);
-            mCollapseMode = a.getInt(R.styleable.CollapsingAppBarLayout_LayoutParams_layout_collapseMode,
-                    COLLAPSE_MODE_OFF);
+            TypedArray a = c.obtainStyledAttributes(attrs, R.styleable.CollapsingToolbarLayout_Layout);
+            mCollapseMode = a.getInt(
+                    R.styleable.CollapsingToolbarLayout_Layout_layout_collapseMode, COLLAPSE_MODE_OFF);
 
             setParallaxMultiplier(a.getFloat(
-                    R.styleable.CollapsingAppBarLayout_LayoutParams_layout_collapseParallaxMultiplier,
+                    R.styleable.CollapsingToolbarLayout_Layout_layout_collapseParallaxMultiplier,
                     DEFAULT_PARALLAX_MULTIPLIER));
 
             a.recycle();
@@ -866,6 +1121,7 @@ public class GpCollapsingToolbar extends FrameLayout {
          * {@code 1.0f} indicates normal scroll movement.
          *
          * @param multiplier the multiplier.
+         *
          * @see #getParallaxMultiplier()
          */
         public void setParallaxMultiplier(float multiplier) {
@@ -880,6 +1136,15 @@ public class GpCollapsingToolbar extends FrameLayout {
          */
         public float getParallaxMultiplier() {
             return mParallaxMult;
+        }
+    }
+
+    /**
+     * Show or hide the scrims if needed
+     */
+    final void updateScrimVisibility() {
+        if (mContentScrim != null || mStatusBarScrim != null) {
+            setScrimsShown(getHeight() + mCurrentOffset < getScrimVisibleHeightTrigger());
         }
     }
 
@@ -929,7 +1194,7 @@ public class GpCollapsingToolbar extends FrameLayout {
                 if (mGooglePlayBehaviour) {
                     processLikeGooglePlayBehaviour(height, verticalOffset, scrollRange);
                 } else {
-                    setScrimsShown(getHeight() + verticalOffset < getScrimTriggerOffset() + insetTop);
+                    updateScrimVisibility();
                 }
             }
 
@@ -942,15 +1207,6 @@ public class GpCollapsingToolbar extends FrameLayout {
             /*Log.e("LOG", "offset = " + verticalOffset + "; height = " + height + "; isTransparent = " + scrollRange
                     + "; scrollRange = " + scrollRange);// + "; expandRange = " + expandRange);*/
             mCollapsingTextHelper.setExpansionFraction(Math.abs(verticalOffset) / (float) expandRange);
-
-            if (Math.abs(verticalOffset) == scrollRange) {
-                // If we have some pinned children, and we're offset to only show those views,
-                // we want to be elevate
-                ViewCompat.setElevation(layout, layout.getTargetElevation());
-            } else {
-                // Otherwise, we're inline with the content
-                ViewCompat.setElevation(layout, 0f);
-            }
         }
 
         private void processLikeGooglePlayBehaviour(int toolbarHeight, int verticalOffset, int scrollRange) {
@@ -971,7 +1227,7 @@ public class GpCollapsingToolbar extends FrameLayout {
                 scrollDown = false;
             }
 
-            //if scrollUp and scrim not shown - then
+            // if scrollUp and scrim not shown - then
             // 1. Save previous ContentScrim
             // 2. Set contentScrim = (transparent);
             // If scrollDown && shown && current content scrim == transparent => return previous ContentScrim

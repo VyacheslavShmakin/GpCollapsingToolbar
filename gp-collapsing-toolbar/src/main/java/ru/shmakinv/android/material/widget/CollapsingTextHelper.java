@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2015 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package ru.shmakinv.android.material.widget;
 
 import android.annotation.SuppressLint;
@@ -20,13 +35,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.animation.Interpolator;
 
-/**
- * CollapsingTextHelper
- *
- * @author Vyacheslav Shmakin
- * @version 02.02.2016
- */
-class CollapsingTextHelper {
+final class CollapsingTextHelper {
 
     // Pre-JB-MR2 doesn't support HW accelerated canvas scaled text so we will workaround it
     // by using our own texture
@@ -52,8 +61,8 @@ class CollapsingTextHelper {
     private final RectF mCurrentBounds;
     private int mExpandedTextGravity = Gravity.CENTER_VERTICAL;
     private int mCollapsedTextGravity = Gravity.CENTER_VERTICAL;
-    private float mExpandedTextSize = 11;
-    private float mCollapsedTextSize = 10;
+    private float mExpandedTextSize = 15;
+    private float mCollapsedTextSize = 15;
     private int mExpandedTextColor;
     private int mCollapsedTextColor;
 
@@ -96,8 +105,7 @@ class CollapsingTextHelper {
     public CollapsingTextHelper(View view) {
         mView = view;
 
-        mTextPaint = new TextPaint();
-        mTextPaint.setAntiAlias(true);
+        mTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG);
 
         mCollapsedBounds = new Rect();
         mExpandedBounds = new Rect();
@@ -202,7 +210,7 @@ class CollapsingTextHelper {
         mCollapsedShadowRadius = a.getFloat(R.styleable.TextAppearance_android_shadowRadius, 0);
         a.recycle();
 
-        if (Build.VERSION.SDK_INT >= 16) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
             mCollapsedTypeface = readFontFamilyTypeface(resId);
         }
 
@@ -353,7 +361,7 @@ class CollapsingTextHelper {
                 mCollapsedDrawY = mCollapsedBounds.centerY() + textOffset;
                 break;
         }
-        switch (collapsedAbsGravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
+        switch (collapsedAbsGravity & GravityCompat.RELATIVE_HORIZONTAL_GRAVITY_MASK) {
             case Gravity.CENTER_HORIZONTAL:
                 mCollapsedDrawX = mCollapsedBounds.centerX() - (width / 2);
                 break;
@@ -385,7 +393,7 @@ class CollapsingTextHelper {
                 mExpandedDrawY = mExpandedBounds.centerY() + textOffset;
                 break;
         }
-        switch (expandedAbsGravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
+        switch (expandedAbsGravity & GravityCompat.RELATIVE_HORIZONTAL_GRAVITY_MASK) {
             case Gravity.CENTER_HORIZONTAL:
                 mExpandedDrawX = mExpandedBounds.centerX() - (width / 2);
                 break;
@@ -422,10 +430,6 @@ class CollapsingTextHelper {
 
             final float ascent;
             final float descent;
-
-            // Update the TextPaint to the current text size
-            mTextPaint.setTextSize(mCurrentTextSize);
-
             if (drawTexture) {
                 ascent = mTextureAscent * mScale;
                 descent = mTextureDescent * mScale;
@@ -446,8 +450,6 @@ class CollapsingTextHelper {
             if (mScale != 1f) {
                 canvas.scale(mScale, mScale, x, y);
             }
-
-            //Log.e("LOG", "x: " + x + "; y: " + y);
 
             if (drawTexture) {
                 // If we should use a texture, draw it instead of text
@@ -523,6 +525,8 @@ class CollapsingTextHelper {
         if (mTextToDraw == null || updateDrawText) {
             mTextPaint.setTextSize(mCurrentTextSize);
             mTextPaint.setTypeface(mCurrentTypeface);
+            // Use linear text scaling if we're scaling the canvas
+            mTextPaint.setLinearText(mScale != 1f);
 
             // If we don't currently have text to draw, or the text size has changed, ellipsize...
             final CharSequence title = TextUtils.ellipsize(mText, mTextPaint,
@@ -627,8 +631,7 @@ class CollapsingTextHelper {
         return Color.argb((int) a, (int) r, (int) g, (int) b);
     }
 
-    private static float lerp(float startValue, float endValue, float fraction,
-                              Interpolator interpolator) {
+    private static float lerp(float startValue, float endValue, float fraction, Interpolator interpolator) {
         if (interpolator != null) {
             fraction = interpolator.getInterpolation(fraction);
         }

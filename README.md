@@ -7,7 +7,7 @@ Download
 Gradle:
 
 ```groovy
-compile 'com.github.VyacheslavShmakin.gp-collapsing-toolbar:1.0.0'
+compile 'com.github.VyacheslavShmakin.gp-collapsing-toolbar:1.0.1'
 ```
 
 Maven:
@@ -16,7 +16,7 @@ Maven:
 <dependency>
     <groupId>com.github.VyacheslavShmakin</groupId>
     <artifactId>gp-collapsing-toolbar</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <type>aar</type>
 </dependency>
 ```
@@ -27,8 +27,8 @@ Usage
 #### In Code
 If you wanna enable/disable or check like Google Play app styled behaviour programmatically you should call these methods
 ``` java
-YourGpCollapsingToolbar.setGooglePlayBehaviour(true);
-YourGpCollapsingToolbar.isGooglePlayBehaviour();
+myGpCollapsingToolbar.setGooglePlayBehaviour(true);
+myGpCollapsingToolbar.isGooglePlayBehaviour();
 ```
 
 -----
@@ -44,6 +44,8 @@ You should use the same parameters that defined in support.design library for Co
             app:gp_collapsedTitleTextAppearance="@style/Toolbar.TitleText"
             app:gp_marketStyledBehaviour="true"
             app:gp_contentScrim="@color/color_primary"
+            app:gp_scrimAnimationDuration="300"
+            app:layout_scrollInterpolator="@android:anim/accelerate_decelerate_interpolator"
             app:layout_scrollFlags="scroll|enterAlways|enterAlwaysCollapsed"
             app:gp_statusBarScrim="@color/color_primary_dark"
             app:toolbarId="@id/toolbar">

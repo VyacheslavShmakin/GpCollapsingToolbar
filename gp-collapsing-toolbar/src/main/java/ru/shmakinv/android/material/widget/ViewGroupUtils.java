@@ -5,9 +5,6 @@ import android.os.Build;
 import android.view.View;
 import android.view.ViewGroup;
 
-/**
- * ViewGroupUtils
- */
 class ViewGroupUtils {
 
     private interface ViewGroupUtilsImpl {
@@ -18,6 +15,10 @@ class ViewGroupUtils {
         @Override
         public void offsetDescendantRect(ViewGroup parent, View child, Rect rect) {
             parent.offsetDescendantRectToMyCoords(child, rect);
+            // View#offsetDescendantRectToMyCoords includes scroll offsets of the last child.
+            // We need to reverse it here so that we get the rect of the view itself rather
+            // than its content.
+            rect.offset(child.getScrollX(), child.getScrollY());
         }
     }
 
@@ -41,7 +42,7 @@ class ViewGroupUtils {
 
     /**
      * This is a port of the common
-     * {@link ViewGroup#offsetDescendantRectToMyCoords(View, Rect)}
+     * {@link ViewGroup#offsetDescendantRectToMyCoords(android.view.View, android.graphics.Rect)}
      * from the framework, but adapted to take transformations into account. The result
      * will be the bounding rect of the real transformed rect.
      *

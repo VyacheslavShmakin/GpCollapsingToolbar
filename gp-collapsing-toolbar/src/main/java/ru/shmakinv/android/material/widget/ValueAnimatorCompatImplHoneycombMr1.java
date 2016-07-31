@@ -5,9 +5,6 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.view.animation.Interpolator;
 
-/**
- * ValueAnimatorCompatImplHoneycombMr1
- */
 class ValueAnimatorCompatImplHoneycombMr1 extends ValueAnimatorCompat.Impl {
 
     final ValueAnimator mValueAnimator;
@@ -82,7 +79,7 @@ class ValueAnimatorCompatImplHoneycombMr1 extends ValueAnimatorCompat.Impl {
     }
 
     @Override
-    public void setDuration(int duration) {
+    public void setDuration(long duration) {
         mValueAnimator.setDuration(duration);
     }
 
