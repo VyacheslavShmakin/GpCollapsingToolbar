@@ -35,7 +35,7 @@
             <flag name="start" value="0x00800003"/>
             <flag name="end" value="0x00800005"/>
         </attr>
-        <attr name="gp_scrimVisibleHeightTrigger" format="integer"/>
+        <attr name="gp_scrimVisibleHeightTrigger" format="dimension"/>
         <attr name="gp_scrimAnimationDuration" format="integer"/>
         <attr name="gp_titleEnabled" format="boolean"/>
         <attr name="gp_title" format="string"/>
