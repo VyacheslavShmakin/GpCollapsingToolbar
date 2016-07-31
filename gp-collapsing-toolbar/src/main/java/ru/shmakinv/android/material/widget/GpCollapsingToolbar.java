@@ -68,7 +68,7 @@ public class GpCollapsingToolbar extends FrameLayout {
     private boolean mScrimsAreShown;
     private ValueAnimatorCompat mScrimAnimator;
     private int mScrimAnimationDuration;
-    private int mScrimVisibleHeightTrigger = -1;
+    private int mScrimVisibleHeightTrigger = 0;
 
     private AppBarLayout.OnOffsetChangedListener mOnOffsetChangedListener;
 
@@ -143,7 +143,8 @@ public class GpCollapsingToolbar extends FrameLayout {
                     a.getResourceId(R.styleable.GpCollapsingToolbarLayout_gp_collapsedTitleTextAppearance, 0));
         }
 
-        mScrimVisibleHeightTrigger = a.getInt(R.styleable.GpCollapsingToolbarLayout_gp_scrimVisibleHeightTrigger, -1);
+        mScrimVisibleHeightTrigger = a.getDimensionPixelSize(
+                R.styleable.GpCollapsingToolbarLayout_gp_scrimVisibleHeightTrigger, 0);
 
         mScrimAnimationDuration = a.getInt(
                 R.styleable.GpCollapsingToolbarLayout_gp_scrimAnimationDuration,
