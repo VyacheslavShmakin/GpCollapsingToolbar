@@ -46,7 +46,8 @@
     <android.support.design.widget.CoordinatorLayout
         android:id="@+id/coordinator"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="@bool/collapsing_toolbar_fit_windows">
 
         <android.support.design.widget.AppBarLayout
             android:id="@+id/app_bar"
@@ -61,10 +62,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:fitsSystemWindows="true"
+                app:gp_collapsedTitleTextAppearance="@style/Toolbar.TitleText"
                 app:gp_contentScrim="@android:color/holo_red_dark"
                 app:gp_marketStyledBehaviour="true"
                 app:gp_scrimAnimationDuration="300"
-                app:layout_scrollInterpolator="@android:anim/accelerate_decelerate_interpolator"
                 app:gp_statusBarScrim="@android:color/holo_red_light"
                 app:layout_scrollFlags="scroll|enterAlways|enterAlwaysCollapsed">
 
@@ -81,8 +82,11 @@
                     android:id="@+id/toolbar"
                     android:layout_width="match_parent"
                     android:layout_height="?attr/actionBarSize"
+                    android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
                     app:layout_collapseMode="pin"
-                    app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
+                    app:layout_scrollFlags="scroll|enterAlways"
+                    app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+                    app:titleTextAppearance="@style/Toolbar.TitleText"/>
 
             </ru.shmakinv.android.material.widget.GpCollapsingToolbar>
         </android.support.design.widget.AppBarLayout>

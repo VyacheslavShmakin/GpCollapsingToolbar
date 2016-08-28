@@ -5,4 +5,6 @@
     <dimen name="app_bar_height">180dp</dimen>
     <dimen name="parallax_bg_height">180dp</dimen>
     <dimen name="content_margin_horizontal">0dp</dimen>
+
+    <bool name="collapsing_toolbar_fit_windows">true</bool>
 </resources>

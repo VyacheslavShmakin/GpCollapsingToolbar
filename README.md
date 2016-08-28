@@ -1,5 +1,7 @@
 # GooglePlay-CollapsingToolbar
 Extended CollapsingToolbar that implemented scrolling behaviour like in Google Play app
+![](https://raw.githubusercontent.com/VyacheslavShmakin/GpCollapsingToolbar/master/sample/demo.gif)
+
 
 Download
 --------
