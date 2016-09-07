@@ -9,7 +9,7 @@ Download
 Gradle:
 
 ```groovy
-compile 'com.github.VyacheslavShmakin.gp-collapsing-toolbar:1.0.1'
+compile 'com.github.VyacheslavShmakin:gp-collapsing-toolbar:1.0.1'
 ```
 
 Maven:
